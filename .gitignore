@@ -6,3 +6,5 @@ config/config.yaml  # <-- This excludes your real config with API keys
 .env
 secrets/
 *.log
+config/config.yaml
+.env
