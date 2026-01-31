@@ -1,0 +1,24 @@
+youtube:
+  api_key: "YOUR_YOUTUBE_API_KEY_HERE"
+  max_results: 100
+  max_videos_per_channel: 150
+
+curated_channels:
+  - name: "PsychologicalShadows"
+    channel_id: "UCvBvMZqbp4YQvXQZ4pC5J6w"
+    type: "dark_psychology"
+    priority: 1
+  # ... [Keep all your channel definitions exactly as they were]
+  - name: "BasedZeus"
+    channel_id: "UC6c1z7bA__85CIWZ_jpCK-Q"
+    type: "mindset"
+    priority: 2
+
+app:
+  host: "0.0.0.0"
+  port: 5000
+  log_level: "INFO"
+
+ollama:
+  cloud_model: "gpt-oss:120b-cloud"
+  api_key: "YOUR_OLLAMA_CLOUD_API_KEY_HERE"
