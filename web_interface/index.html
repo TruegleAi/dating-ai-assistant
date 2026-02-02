@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Munch - AI Dating Assistant</title>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <img src="/static/logo.png" alt="Munch" class="logo">
+            <div id="status" class="status">
+                <span id="status-indicator" class="status-indicator"></span>
+                <span id="status-text">Checking connection...</span>
+            </div>
+        </header>
+
+        <div class="tabs">
+            <button class="tab active" onclick="showTab('advice')">Get Advice</button>
+            <button class="tab" onclick="showTab('analyze')">Analyze Interest</button>
+            <button class="tab" onclick="showTab('opener')">Generate Opener</button>
+        </div>
+
+        <!-- Advice Tab -->
+        <div id="advice-tab" class="tab-content active">
+            <div class="card">
+                <h2>Get Dating Advice</h2>
+
+                <div class="form-group">
+                    <textarea id="advice-query" rows="4" placeholder="Ask anything... (e.g., She replied after 2 days. Should I respond right away?)"></textarea>
+                </div>
+
+                <button onclick="getAdvice()" class="btn-primary">Get Advice</button>
+
+                <div id="advice-result" class="result"></div>
+            </div>
+        </div>
+
+        <!-- Analyze Tab -->
+        <div id="analyze-tab" class="tab-content">
+            <div class="card">
+                <h2>Analyze Interest Level</h2>
+
+                <div id="messages-container">
+                    <div class="message-input">
+                        <select class="sender-select">
+                            <option value="user">You</option>
+                            <option value="woman">Her</option>
+                        </select>
+                        <input type="text" class="message-text" placeholder="Message text...">
+                        <button onclick="removeMessage(this)" class="btn-remove">×</button>
+                    </div>
+                </div>
+
+                <button onclick="addMessage()" class="btn-secondary">+ Add Message</button>
+                <button onclick="analyzeInterest()" class="btn-primary">Analyze Interest</button>
+
+                <div id="analyze-result" class="result"></div>
+            </div>
+        </div>
+
+        <!-- Opener Tab -->
+        <div id="opener-tab" class="tab-content">
+            <div class="card">
+                <h2>Generate Opening Line</h2>
+
+                <div class="form-group">
+                    <textarea id="profile-context" rows="3" placeholder="Describe her profile... (e.g., She has photos of hiking and loves dogs)"></textarea>
+                </div>
+
+                <div class="form-group">
+                    <label>Platform</label>
+                    <select id="platform">
+                        <option value="instagram">Instagram</option>
+                        <option value="tinder">Tinder</option>
+                        <option value="bumble">Bumble</option>
+                        <option value="hinge">Hinge</option>
+                    </select>
+                </div>
+
+                <button onclick="generateOpener()" class="btn-primary">Generate Opener</button>
+
+                <div id="opener-result" class="result"></div>
+            </div>
+        </div>
+    </div>
+
+    <script src="/static/app.js"></script>
+</body>
+</html>

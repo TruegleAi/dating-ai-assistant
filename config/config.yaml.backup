@@ -1,0 +1,36 @@
+youtube:
+  api_key: "AIzaSyCjjf1emjMtTR6J9ebdorhldEUiVTfobL0"
+  max_results: 100
+  max_videos_per_channel: 150
+
+curated_channels:
+  - name: "PsychologicalShadows"
+    channel_id: "UCvBvMZqbp4YQvXQZ4pC5J6w"
+    type: "dark_psychology"
+    priority: 1
+  - name: "Darkpsychologyy"
+    channel_id: "UCLq8mQ5pI5OZ5XJ6gQ2Qz0Q"
+    type: "dark_psychology"
+    priority: 1
+  - name: "Francesca Psychology"
+    channel_id: "UCmJWxL-S_cGLXsbx8vhbq9Q"
+    type: "dating_psychology"
+    priority: 1
+  - name: "AlphaMaleStrategies"
+    channel_id: "UCq8Y4uOsGXq4xvagGJzA8AA"
+    type: "dating_strategy"
+    priority: 2
+  - name: "BasedZeus"
+    channel_id: "UC6c1z7bA__85CIWZ_jpCK-Q"
+    type: "mindset"
+    priority: 2
+
+app:
+  host: "0.0.0.0"
+  port: 5000
+  log_level: "INFO"
+
+ollama:
+  cloud_model: "gpt-oss:120b-cloud"
+  # Primary working key - DuckyDevPrivateAPI
+  api_key: "5c1bf16f1a17496c8f7b92b53468fd11.O720uU3HZXHIBrAppgeu73OJ"
