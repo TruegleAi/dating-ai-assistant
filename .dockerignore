@@ -1,0 +1,55 @@
+# Git
+.git
+.gitignore
+
+# Python
+__pycache__
+*.py[cod]
+*$py.class
+*.so
+.Python
+venv/
+env/
+.env
+*.egg
+*.egg-info/
+dist/
+build/
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+.DS_Store
+
+# Testing
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Documentation
+*.md
+!README.md
+docs/
+
+# Logs
+logs/
+*.log
+
+# Development files
+.claude/
+munch-plan/
+*.backup
+*.bak
+
+# Database (will be mounted as volume)
+# munch_ai.db
+
+# SSL certificates (mount separately)
+ssl/
+
+# Temporary files
+tmp/
+temp/
+*.tmp

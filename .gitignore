@@ -8,3 +8,7 @@ secrets/
 *.log
 config/config.yaml
 .env
+node_modules/
+Pawximity/node_modules/
+*.db
+*.DS_Store

@@ -1,0 +1,24 @@
+{
+  "app_name": "Munch",
+  "permanent_mission": "DATING ADVICE AI - Text/DM/Real Life Dating Coach with AI Insights",
+  "vision_holder": "O'Shea", 
+  "created_date": "2025-02-14",
+  "non_negotiable_identity": [
+    "ABSOLUTELY NOT FOOD OR RESTAURANT RELATED",
+    "MUST remain dating/relationship advice focused",
+    "AI-powered insights for dating success",
+    "Tracks success/failure percentages and learns from user methods"
+  ],
+  "core_functionality": [
+    "AI analysis of dating text/DM conversations",
+    "Success/failure tracking with percentage metrics",
+    "Machine learning to reinforce successful methods",
+    "Real-life dating scenario advice",
+    "Progressive learning of user's effective techniques"
+  ],
+  "current_status": "PRODUCTION_READY",
+  "priority": "MAINTENANCE",
+  "assigned_primary": "Claude Desktop",
+  "vision_protection_level": "HIGHEST -最容易 misinterpreted as food app",
+  "original_vision_preserved": "YES - this file cannot be altered by agents"
+}
