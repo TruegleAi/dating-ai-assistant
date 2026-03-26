@@ -22,8 +22,7 @@ CURRENT_STATE = {
         "Interest analysis (basic)",
         "Opener generation",
         "YouTube knowledge base integration",
-        "CORS enabled",
-        "Cloudflare tunnel support"
+        "CORS enabled"
     ],
     "data_models": [
         "MessageRequest",

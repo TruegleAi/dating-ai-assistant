@@ -10,14 +10,11 @@ This file contains essential information for agentic coding agents working in th
 - **Manual API testing**: Use the interactive test suite in `test_app.py`
 
 ### Development Server
-- **Start locally**: `./start_app.sh` (runs on http://localhost:5000)
-- **Start with tunnel**: `./start_with_tunnel.sh` (creates external access)
-- **Health check**: `curl http://localhost:5000/health`
+- **Start locally**: `uvicorn app:app --reload --port 8000`
+- **Health check**: `curl http://localhost:8000/health`
 
 ### Application Management
-- **Switch AI modes**: `./switch_mode.sh [cloud|local|tunnel]`
-- **Setup tunnel**: `./setup_tunnel.sh`
-- **View logs**: `tail -f /tmp/munch_app.log` or `tail -f /tmp/munch_tunnel.log`
+- **View logs**: `tail -f /tmp/munch_app.log`
 
 ## 📁 Project Structure
 
@@ -167,11 +164,6 @@ cp config.yaml.example config.yaml  # (if template exists)
 - Use secure credential management (not config files)
 - Monitor logs in `/tmp/munch_app.log`
 
-### Cloudflare Tunnel Setup
-The project includes built-in tunnel support for external access:
-- Tunnel creates public URL that forwards to localhost:5000
-- Useful for testing web applications from external domains
-- Configure with `./setup_tunnel.sh` and run with `./start_with_tunnel.sh`
 
 ## 🧪 Key Dependencies
 
@@ -209,6 +201,5 @@ The project includes built-in tunnel support for external access:
 
 ### Performance Monitoring
 - Monitor AI API response times
-- Check tunnel connectivity if using external access
 - Review log files for errors: `/tmp/munch_app.log`
 - Test endpoints after any configuration changes

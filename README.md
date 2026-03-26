@@ -17,14 +17,12 @@ A cloud-powered AI assistant that provides dating advice and psychology-based me
 - **Interest Analysis**: Analyzes message patterns to gauge her interest level.
 - **Premium Openers**: Generates unforgettable opening lines tailored to her profile.
 - **YouTube Knowledge Base**: Context from specialized dating/psychology channels.
-- **External Access**: Cloudflare tunnel support for remote access
 - **CORS Enabled**: Cross-origin resource sharing for web applications
 
 ## 🚀 Quick Start
 
 ### Prerequisites
 - Python 3.12+
-- Cloudflare account (for external access)
 
 ### Installation
 1. **Clone & Setup**:
@@ -45,46 +43,12 @@ A cloud-powered AI assistant that provides dating advice and psychology-based me
 
 3. **Start the Application**:
    ```bash
-   ./start_app.sh
-   ```
-
-## 🌐 External Access with Cloudflare Tunnel
-
-To access your application from external networks:
-
-1. **Install Cloudflared** (if not already installed):
-   ```bash
-   # macOS
-   brew install cloudflare/cloudflare/cloudflared/cloudflared
-   
-   # Ubuntu/Debian
-   curl -L --output cloudflared.deb https://github.com/cloudflare/cloudflared/releases/latest/download/cloudflared-linux-amd64.deb
-   sudo dpkg -i cloudflared.deb
-   ```
-
-2. **Start with Tunnel**:
-   ```bash
-   ./start_with_tunnel.sh
-   ```
-   
-   This will start both the application and create a public URL accessible from anywhere.
-
-3. **Alternative Method**:
-   You can also run the tunnel separately:
-   ```bash
-   # Start the app normally
-   ./start_app.sh
-   
-   # In another terminal, start the tunnel
-   cloudflared tunnel --url http://localhost:5000
+   source .env
+   uvicorn app:app --reload --port 8000
    ```
 
 ## 🛠️ Scripts Overview
 
-- `start_app.sh`: Starts the application locally on port 5000
-- `start_with_tunnel.sh`: Starts the application and Cloudflare tunnel for external access
-- `setup_tunnel.sh`: Creates Cloudflare tunnel configuration
-- `switch_mode.sh`: Switch between cloud/local AI models or show tunnel info
 - `test_app.py`: Comprehensive test suite
 
 ## 🧪 Testing
@@ -130,19 +94,13 @@ This enables remote web applications to access the API without CORS errors.
 
 ## 🤖 AI Models
 
-Switch between AI models using:
-```bash
-./switch_mode.sh cloud    # Use cloud model
-./switch_mode.sh local    # Use local model
-./switch_mode.sh tunnel   # Show tunnel instructions
-```
+Set `GROQ_API_KEY` in your `.env` to use Groq (recommended). Falls back to Ollama if not set.
 
 ## 🚀 Deployment
 
 For production deployment:
 1. Use a reverse proxy (nginx/Apache) with SSL
-2. Or use the Cloudflare tunnel for quick external access
-3. Configure proper domain and SSL certificates
+2. Configure proper domain and SSL certificates
 
 ## 📚 Documentation
 
@@ -155,7 +113,6 @@ For production deployment:
 - **Port in use**: `lsof -ti:5000 | xargs kill -9`
 - **Check status**: `curl http://localhost:5000/health`
 - **View logs**: `tail -f /tmp/munch_app.log`
-- **Tunnel logs**: `tail -f /tmp/munch_tunnel.log`
 
 ## 📞 Support
 

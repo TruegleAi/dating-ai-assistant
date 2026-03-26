@@ -224,7 +224,6 @@ pip install slowapi
 
 **Completed:**
 - [x] Basic FastAPI app running
-- [x] Cloudflare tunnel support
 - [x] CORS configuration
 
 **Remaining Tasks:**
@@ -380,9 +379,8 @@ sqlite3 munch_ai.db ".tables"         # List tables
 sqlite3 munch_ai.db ".schema users"   # View schema
 
 # Development
-./start_app.sh                        # Start app locally
-./start_with_tunnel.sh                # Start with tunnel
-curl http://localhost:5000/health     # Test health
+uvicorn app:app --reload --port 8000  # Start app locally
+curl http://localhost:8000/health     # Test health
 
 # CodeLlama
 codellama "your question here"        # Get AI coding help
