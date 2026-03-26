@@ -1,4 +1,14 @@
-# <0001f9e0> Dating AI Assistant (Munch)
+---
+title: Munch
+emoji: 🧲
+colorFrom: pink
+colorTo: red
+sdk: docker
+app_port: 8000
+pinned: false
+---
+
+# 🧲 Munch - Dating AI Assistant
 
 A cloud-powered AI assistant that provides dating advice and psychology-based messaging strategies, trained on curated YouTube content about attraction and social dynamics.
 

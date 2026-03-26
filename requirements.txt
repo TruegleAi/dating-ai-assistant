@@ -28,6 +28,23 @@ pyyaml==6.0.1
 tqdm==4.66.2
 colorama==0.4.6
 
+# Authentication & Security
+python-jose[cryptography]==3.3.0
+passlib[bcrypt]==1.7.4
+bcrypt==4.1.2
+slowapi==0.1.9
+limits==3.6.0
+
+# Image Processing
+Pillow==10.2.0
+python-multipart==0.0.9
+
 # Alternative to Rasa for Python 3.13
 langchain==0.1.5
 openai==1.12.0  # For using GPT models via API
+
+# Caching
+redis==5.0.1
+
+# Error Tracking
+sentry-sdk[fastapi]==1.40.0

@@ -1,10 +1,30 @@
 venv/
 __pycache__/
 *.pyc
-config/config.yaml  # <-- This excludes your real config with API keys
+*.pyo
+*.pyd
+config/config.yaml
 *.env
 .env
 secrets/
 *.log
-config/config.yaml
-.env
+logs/
+
+# macOS metadata
+.DS_Store
+._.DS_Store
+._*
+.AppleDouble
+.LSOverride
+
+# Database files
+*.db
+*.sqlite
+
+# Claude memory
+.claude/
+
+# Misc
+global_orchestration_context.json
+munch_mission.json
+munch_ai.db
