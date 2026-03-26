@@ -1,5 +1,5 @@
 ---
-title: Munch
+title: Munch GPT
 emoji: 🧲
 colorFrom: pink
 colorTo: red
