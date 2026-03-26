@@ -20,6 +20,8 @@ import os
 import requests
 import json
 from datetime import datetime
+from dotenv import load_dotenv
+load_dotenv()
 
 # Sentry Error Tracking
 sentry_dsn = os.getenv("SENTRY_DSN")
@@ -205,29 +207,35 @@ with open("config/config.yaml", "r") as f:
 # ===================== AI ASSISTANT CORE =====================
 class DatingAssistant:
     def __init__(self):
-        # Ollama Desktop App configuration (routes to cloud models)
+        # Groq takes priority if GROQ_API_KEY is set
+        self.groq_api_key = os.getenv("GROQ_API_KEY")
+        self.groq_model = os.getenv("GROQ_MODEL", "llama-3.3-70b-versatile")
+        self.groq_base_url = "https://api.groq.com/openai/v1"
+
+        # Ollama fallback configuration
         self.base_url = config['ollama'].get('base_url', 'http://localhost:11434')
         self.primary_model = config['ollama'].get('primary_model', 'gpt-oss:20b-cloud')
         self.fallback_models = config['ollama'].get('fallback_models', ['glm-4:6b-cloud', 'minimax-m2-cloud'])
         self.ollama_model = config['ollama'].get('cloud_model', self.primary_model)
-
-        # Current active model
         self.active_model = self.primary_model
 
-        print(f"✅ Assistant initialized with Ollama Desktop (Cloud Models)")
-        print(f"   Primary: {self.primary_model}")
-        print(f"   Fallbacks: {', '.join(self.fallback_models)}")
-
-        # Test connection and find available model
-        if self._test_connection():
-            available_model = self._find_available_model()
-            if available_model:
-                self.active_model = available_model
-                print(f"   🔗 Connected! Using: {self.active_model}")
-            else:
-                print(f"   🔗 Connected! Will use: {self.primary_model}")
+        if self.groq_api_key:
+            print(f"✅ Assistant initialized with Groq")
+            print(f"   Model: {self.groq_model}")
         else:
-            print("   ⚠️  Ollama not running. Start Ollama Desktop app first.")
+            print(f"✅ Assistant initialized with Ollama Desktop (Cloud Models)")
+            print(f"   Primary: {self.primary_model}")
+            print(f"   Fallbacks: {', '.join(self.fallback_models)}")
+
+            if self._test_connection():
+                available_model = self._find_available_model()
+                if available_model:
+                    self.active_model = available_model
+                    print(f"   🔗 Connected! Using: {self.active_model}")
+                else:
+                    print(f"   🔗 Connected! Will use: {self.primary_model}")
+            else:
+                print("   ⚠️  Ollama not running. Start Ollama Desktop app first.")
 
         self.interest_thresholds = {'high': 70, 'medium': 40, 'low': 0}
         self.reply_timing = {'high': "15-45 min", 'medium': "1-3 hours", 'low': "4-24 hours"}
@@ -298,8 +306,37 @@ class DatingAssistant:
 
         return "I apologize, but I'm having trouble connecting to the AI brain right now. Please check that Ollama is running."
 
+    def _call_groq(self, system_prompt: str, user_prompt: str) -> str:
+        """Call Groq via OpenAI-compatible API"""
+        headers = {
+            "Authorization": f"Bearer {self.groq_api_key}",
+            "Content-Type": "application/json"
+        }
+        payload = {
+            "model": self.groq_model,
+            "messages": [
+                {"role": "system", "content": system_prompt},
+                {"role": "user", "content": user_prompt}
+            ],
+            "temperature": 0.7
+        }
+        try:
+            response = requests.post(
+                f"{self.groq_base_url}/chat/completions",
+                headers=headers,
+                json=payload,
+                timeout=30
+            )
+            response.raise_for_status()
+            return response.json()["choices"][0]["message"]["content"]
+        except Exception as e:
+            print(f"   Groq call failed: {e}")
+            return "I'm having trouble reaching the AI right now. Please try again."
+
     def _call_ollama_cloud(self, system_prompt: str, user_prompt: str) -> str:
-        """Wrapper for backward compatibility - uses local Ollama"""
+        """Route to Groq if configured, otherwise use Ollama"""
+        if self.groq_api_key:
+            return self._call_groq(system_prompt, user_prompt)
         return self._call_ollama(system_prompt, user_prompt)
     
     def analyze_interest(self, messages: List[dict]) -> dict:
