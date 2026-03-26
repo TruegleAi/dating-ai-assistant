@@ -201,8 +201,18 @@ class ImageAnalyzeBase64(BaseModel):
     conversation_id: Optional[int] = None  # Optional: auto-add extracted messages
 
 # ===================== LOAD CONFIG =====================
-with open("config/config.yaml", "r") as f:
-    config = yaml.safe_load(f)
+_config_paths = ["config/config.yaml", "config/config.yaml.template"]
+config = None
+for _path in _config_paths:
+    if os.path.exists(_path):
+        with open(_path, "r") as f:
+            config = yaml.safe_load(f)
+        break
+if config is None:
+    config = {"ollama": {}, "app": {}, "youtube": {}}
+# Allow env vars to override config values
+if os.getenv("YOUTUBE_API_KEY"):
+    config.setdefault("youtube", {})["api_key"] = os.getenv("YOUTUBE_API_KEY")
 
 # ===================== AI ASSISTANT CORE =====================
 class DatingAssistant:
