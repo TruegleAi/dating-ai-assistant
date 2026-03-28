@@ -412,6 +412,99 @@ class AuthService:
                 message="Failed to update password"
             )
 
+    def request_password_reset(self, email: str) -> AuthResult:
+        """
+        Generate a password reset token for a user.
+        In production, this would send an email with the reset link.
+
+        Args:
+            email: User's email address
+
+        Returns:
+            AuthResult with reset token if successful
+        """
+        user = self.db_service.get_user_by_email(email)
+        if not user:
+            # Don't reveal if email exists - security best practice
+            return AuthResult(
+                success=True,
+                message="If that email is registered, a reset link has been sent"
+            )
+
+        # Generate reset token (expires in 1 hour)
+        now = datetime.now(timezone.utc)
+        expires = now + timedelta(hours=1)
+        reset_payload = {
+            "sub": email,
+            "user_id": user.id,
+            "exp": expires,
+            "type": "password_reset"
+        }
+
+        reset_token = jwt.encode(reset_payload, JWT_SECRET_KEY, algorithm=JWT_ALGORITHM)
+
+        # In production: Send email with reset link
+        # For now, just return the token
+        return AuthResult(
+            success=True,
+            message="Password reset token generated",
+            token=Token(
+                access_token=reset_token,
+                refresh_token="",
+                token_type="password_reset",
+                expires_in=3600  # 1 hour
+            ),
+            user_id=user.id
+        )
+
+    def reset_password(self, reset_token: str, new_password: str) -> AuthResult:
+        """
+        Reset password using a valid reset token.
+
+        Args:
+            reset_token: Password reset token from email
+            new_password: New password
+
+        Returns:
+            AuthResult with success status
+        """
+        # Verify reset token
+        payload = verify_token(reset_token, token_type="password_reset")
+        if not payload:
+            return AuthResult(
+                success=False,
+                message="Invalid or expired reset token"
+            )
+
+        user = self.db_service.get_user_by_email(payload.sub)
+        if not user:
+            return AuthResult(
+                success=False,
+                message="User not found"
+            )
+
+        # Validate new password
+        if len(new_password) < 8:
+            return AuthResult(
+                success=False,
+                message="Password must be at least 8 characters"
+            )
+
+        # Update password
+        new_hash = hash_password(new_password)
+        success = self.db_service.update_user_password(user.id, new_hash)
+
+        if success:
+            return AuthResult(
+                success=True,
+                message="Password reset successfully"
+            )
+        else:
+            return AuthResult(
+                success=False,
+                message="Failed to update password"
+            )
+
 
 # ===================== SINGLETON INSTANCE =====================
 

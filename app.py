@@ -59,12 +59,29 @@ from services.auth_service import (
 )
 from services.image_service import ImageAnalysisService, get_image_service
 from services.cache_service import CacheService, get_cache_service
+from services.openai_service import OpenAIService, get_openai_service
 
 # Security
 security = HTTPBearer(auto_error=False)
 
 # Rate Limiting
 limiter = Limiter(key_func=get_remote_address)
+
+# ===================== SECURITY CONFIGURATION =====================
+# CORS Configuration - Load from environment variable
+CORS_ALLOWED_ORIGINS = os.getenv("CORS_ALLOWED_ORIGINS", "http://localhost:5000,http://localhost:3000,http://127.0.0.1:5000")
+ALLOWED_ORIGINS_LIST = [origin.strip() for origin in CORS_ALLOWED_ORIGINS.split(",")]
+
+# Security Headers Configuration
+SECURITY_HEADERS = {
+    "X-Content-Type-Options": "nosniff",
+    "X-Frame-Options": "DENY",
+    "X-XSS-Protection": "1; mode=block",
+    "Strict-Transport-Security": "max-age=31536000; includeSubDomains",
+    "Content-Security-Policy": "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; font-src 'self' data:;",
+    "Referrer-Policy": "strict-origin-when-cross-origin",
+    "Permissions-Policy": "geolocation=(), microphone=(), camera=()"
+}
 
 # ===================== FASTAPI APP SETUP =====================
 app = FastAPI(title="Munch - AI Dating Assistant", version="5.0.0")
@@ -73,14 +90,23 @@ app = FastAPI(title="Munch - AI Dating Assistant", version="5.0.0")
 app.state.limiter = limiter
 app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 
-# CORS - Allow frontend connections
+# CORS - Configurable origins for production security
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=ALLOWED_ORIGINS_LIST,  # Restricted origins from env
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+# Security Headers Middleware
+@app.middleware("http")
+async def add_security_headers(request: Request, call_next):
+    """Add security headers to all responses"""
+    response = await call_next(request)
+    for header, value in SECURITY_HEADERS.items():
+        response.headers[header] = value
+    return response
 
 # ===================== DATA MODELS =====================
 class MessageRequest(BaseModel):
@@ -192,6 +218,15 @@ class AuthRefresh(BaseModel):
 
 class ChangePassword(BaseModel):
     old_password: str
+    new_password: str
+
+
+class PasswordResetRequest(BaseModel):
+    email: str
+
+
+class PasswordResetConfirm(BaseModel):
+    reset_token: str
     new_password: str
 
 
@@ -447,6 +482,12 @@ AVOID:
 # ===================== INITIALIZE ASSISTANT =====================
 assistant = DatingAssistant()
 
+# Initialize OpenAI Service (for production inference)
+openai_service = get_openai_service(
+    model=config.get('openai', {}).get('primary_model', 'gpt-4o-mini'),
+    fallback_models=config.get('openai', {}).get('fallback_models', ['gpt-4o', 'gpt-3.5-turbo'])
+)
+
 # Initialize Analysis Service (Ollama Desktop -> Cloud Models)
 analysis_service = get_analysis_service(
     ollama_model=config['ollama'].get('primary_model', 'gpt-oss:20b-cloud'),
@@ -466,6 +507,14 @@ image_service = get_image_service(
 
 # Initialize Cache Service
 cache_service = get_cache_service()
+
+# Determine active AI provider
+AI_PROVIDER = "openai" if openai_service.enabled else "ollama"
+print(f"\n🤖 AI Provider: {AI_PROVIDER.upper()}")
+if AI_PROVIDER == "openai":
+    print(f"   Using OpenAI models for production inference")
+else:
+    print(f"   Using Ollama (configure OPENAI_API_KEY for production)")
 
 
 # ===================== AUTHENTICATION DEPENDENCIES =====================
@@ -570,27 +619,41 @@ async def health():
     return {
         "status": "healthy",
         "timestamp": datetime.now().isoformat(),
-        "model": config['ollama']['cloud_model'],
+        "ai_provider": AI_PROVIDER,
+        "model": config['openai']['primary_model'] if AI_PROVIDER == "openai" else config['ollama']['cloud_model'],
+        "openai_enabled": openai_service.enabled,
         "cache": "connected" if cache_service.available else "unavailable"
     }
 
 @app.post("/advice")
 @limiter.limit("10/minute")
 async def get_advice(request: Request, message_request: MessageRequest):
-    result = assistant.generate_advice(message_request.text, message_request.context)
-    return {"success": True, "data": result, "premium": message_request.user_type == "premium"}
+    # Use OpenAI if available, otherwise fall back to Ollama
+    if AI_PROVIDER == "openai" and openai_service.enabled:
+        result = openai_service.generate_advice(message_request.text, message_request.context)
+    else:
+        result = assistant.generate_advice(message_request.text, message_request.context)
+    return {"success": True, "data": result, "premium": message_request.user_type == "premium", "provider": AI_PROVIDER}
 
 @app.post("/analyze")
 @limiter.limit("10/minute")
 async def analyze_interest(request: Request, interest_request: InterestAnalysis):
-    analysis = assistant.analyze_interest(interest_request.messages)
-    return {"success": True, "analysis": analysis}
+    # Use OpenAI if available, otherwise fall back to Ollama
+    if AI_PROVIDER == "openai" and openai_service.enabled:
+        analysis = openai_service.analyze_interest(interest_request.messages)
+    else:
+        analysis = assistant.analyze_interest(interest_request.messages)
+    return {"success": True, "analysis": analysis, "provider": AI_PROVIDER}
 
 @app.post("/opener")
 @limiter.limit("10/minute")
 async def get_opener(request: Request, opener_request: OpenerRequest):
-    opener = assistant.generate_premium_opener(opener_request.profile_context, opener_request.platform)
-    return {"success": True, "opener": opener}
+    # Use OpenAI if available, otherwise fall back to Ollama
+    if AI_PROVIDER == "openai" and openai_service.enabled:
+        opener = openai_service.generate_opener(opener_request.profile_context, opener_request.platform)
+    else:
+        opener = assistant.generate_premium_opener(opener_request.profile_context, opener_request.platform)
+    return {"success": True, "opener": opener, "provider": AI_PROVIDER}
 
 
 # ===================== AUTHENTICATION ENDPOINTS =====================
@@ -723,6 +786,48 @@ async def get_current_user_info(
             "subscription_tier": user.subscription_tier,
             "created_at": user.created_at.isoformat()
         }
+    }
+
+
+@app.post("/api/auth/request-password-reset")
+@limiter.limit("5/minute")
+async def request_password_reset(request: Request, reset_request: PasswordResetRequest):
+    """
+    Request a password reset token.
+    In production, this sends an email with the reset link.
+    """
+    result = auth_service.request_password_reset(email=reset_request.email)
+
+    if not result.success:
+        raise HTTPException(status_code=400, detail=result.message)
+
+    # In production, send email here with reset link
+    # For now, return the token (remove in production!)
+    return {
+        "success": True,
+        "message": result.message,
+        "reset_token": result.token.access_token if result.token else None,
+        "note": "In production, this token would be sent via email"
+    }
+
+
+@app.post("/api/auth/reset-password")
+@limiter.limit("10/minute")
+async def reset_password(request: Request, reset_confirm: PasswordResetConfirm):
+    """
+    Reset password using a valid reset token.
+    """
+    result = auth_service.reset_password(
+        reset_token=reset_confirm.reset_token,
+        new_password=reset_confirm.new_password
+    )
+
+    if not result.success:
+        raise HTTPException(status_code=400, detail=result.message)
+
+    return {
+        "success": True,
+        "message": result.message
     }
 
 
