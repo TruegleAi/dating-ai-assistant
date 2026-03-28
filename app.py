@@ -1278,6 +1278,96 @@ async def get_conversation_progression(conversation_id: int):
     return {"success": True, **progression}
 
 
+# ===================== DATE SUCCESS DETECTION =====================
+
+DATE_KEYWORDS = [
+    'meet up', 'meet you', 'hang out', 'grab coffee', 'grab drinks',
+    'get dinner', 'go out', 'come over', 'pick you up', 'see you',
+    'our date', 'dinner plans', 'movie night', 'netflix', 'chill',
+    'when are you free', 'what are you doing', 'let me take you',
+    'i\'ll take you', 'we should meet', 'in person', 'irl',
+    'your place', 'my place', 'confirmed', 'saturday', 'friday',
+    'tonight', 'tomorrow night', 'this weekend', 'she said yes',
+    'she agreed', 'got her number', 'she gave me', 'she\'s down',
+    'she wants to', 'she\'s coming', 'date is set'
+]
+
+@app.get("/api/conversations/{conversation_id}/check-date")
+async def check_date_success(conversation_id: int):
+    """
+    Check if recent messages suggest a date has been secured.
+    Returns date_detected: bool and confidence score.
+    """
+    db_service = get_database_service()
+    conv = db_service.get_conversation(conversation_id)
+    if not conv:
+        raise HTTPException(status_code=404, detail="Conversation not found")
+
+    # Get recent messages
+    messages = db_service.get_messages(conversation_id)
+    if not messages:
+        return {"date_detected": False, "confidence": 0}
+
+    # Check last 10 messages for date keywords
+    recent = messages[-10:]
+    combined_text = " ".join([m.content.lower() for m in recent])
+
+    matches = [kw for kw in DATE_KEYWORDS if kw in combined_text]
+    confidence = min(len(matches) * 20, 100)
+
+    # Also factor in chemistry score
+    if conv.chemistry_score and conv.chemistry_score >= 70:
+        confidence = min(confidence + 20, 100)
+
+    date_detected = confidence >= 40
+
+    return {
+        "date_detected": date_detected,
+        "confidence": confidence,
+        "matched_signals": matches[:5],
+        "chemistry_score": conv.chemistry_score or 0
+    }
+
+
+class DateConfirmRequest(BaseModel):
+    where: str
+    when: str
+    vibe: str  # 'casual', 'romantic', 'coffee', 'activity'
+    notes: Optional[str] = ""
+
+@app.post("/api/conversations/{conversation_id}/confirm-date")
+async def confirm_date_success(conversation_id: int, data: DateConfirmRequest):
+    """
+    User confirms they got a date. Marks conversation as success,
+    unlocks easter egg, returns celebration data.
+    """
+    db_service = get_database_service()
+    conv = db_service.get_conversation(conversation_id)
+    if not conv:
+        raise HTTPException(status_code=404, detail="Conversation not found")
+
+    # Update conversation status
+    db_service.update_conversation_status(conversation_id, ConversationStatus.SUCCESS)
+
+    # Store date details as a system message
+    db_service.add_message(
+        conversation_id=conversation_id,
+        role=MessageRole.ASSISTANT,
+        content=f"[DATE SECURED] Where: {data.where} | When: {data.when} | Vibe: {data.vibe} | Notes: {data.notes}"
+    )
+
+    return {
+        "success": True,
+        "message": "Date confirmed! You earned it. 🎉",
+        "easter_egg_unlocked": True,
+        "date_details": {
+            "where": data.where,
+            "when": data.when,
+            "vibe": data.vibe
+        }
+    }
+
+
 # ===================== ANALYTICS TRENDS ENDPOINTS =====================
 
 @app.get("/api/analytics/trends")

@@ -4,7 +4,82 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Munch - AI Dating Assistant</title>
-    <link rel="stylesheet" href="/static/style.css">
+    <link rel="stylesheet" href="style.css">
+    <style>
+      /* ── DATE QUESTIONNAIRE MODAL ── */
+      .date-modal-overlay {
+        position:fixed;inset:0;background:rgba(0,0,0,0.85);z-index:2000;
+        display:flex;align-items:center;justify-content:center;padding:20px;
+      }
+      .date-modal-overlay.hidden{display:none;}
+      .date-modal-box {
+        background:#0f0f1f;border:1px solid #ff6b9d;border-radius:20px;
+        padding:28px 24px;max-width:400px;width:100%;text-align:center;
+        box-shadow:0 0 40px rgba(255,107,157,0.3);
+      }
+      .date-modal-box h2{color:#ff6b9d;font-size:1.4rem;margin-bottom:6px;}
+      .date-modal-box p{color:#aaa;font-size:0.9rem;margin-bottom:20px;}
+      .date-signals{color:#ffcc44;font-size:0.78rem;margin-bottom:16px;font-style:italic;}
+      .date-field{width:100%;background:#1a1a2e;border:1px solid #333;border-radius:10px;padding:10px 14px;
+        color:#fff;font-size:0.95rem;margin-bottom:12px;outline:none;}
+      .date-field:focus{border-color:#ff6b9d;}
+      .date-vibe-row{display:flex;gap:8px;flex-wrap:wrap;justify-content:center;margin-bottom:18px;}
+      .vibe-btn{padding:8px 14px;border-radius:20px;border:1px solid #444;background:transparent;
+        color:#aaa;cursor:pointer;font-size:0.82rem;transition:all 0.2s;}
+      .vibe-btn.active,.vibe-btn:hover{border-color:#ff6b9d;color:#ff6b9d;background:rgba(255,107,157,0.1);}
+      .date-modal-btns{display:flex;gap:10px;justify-content:center;}
+      .btn-confirm-date{background:linear-gradient(135deg,#ff6b9d,#ff1493);border:none;
+        padding:12px 28px;border-radius:999px;color:#fff;font-weight:700;cursor:pointer;
+        font-size:0.95rem;transition:transform 0.2s;}
+      .btn-confirm-date:hover{transform:scale(1.05);}
+      .btn-skip-date{background:transparent;border:1px solid #444;padding:12px 20px;
+        border-radius:999px;color:#aaa;cursor:pointer;font-size:0.9rem;}
+      /* ── EASTER EGG BUTTON ── */
+      #easter-egg-btn{
+        position:fixed;bottom:24px;left:24px;z-index:900;
+        background:linear-gradient(135deg,#ff6b9d,#c050ff);
+        border:none;border-radius:50%;width:52px;height:52px;
+        font-size:1.4rem;cursor:pointer;box-shadow:0 6px 20px rgba(255,107,157,0.5);
+        transition:transform 0.2s;animation:eggPulse 2s ease-in-out infinite;
+      }
+      #easter-egg-btn.hidden{display:none;}
+      #easter-egg-btn:hover{transform:scale(1.15);}
+      @keyframes eggPulse{0%,100%{box-shadow:0 6px 20px rgba(255,107,157,0.5);}50%{box-shadow:0 6px 30px rgba(192,80,255,0.8);}}
+      /* ── CELEBRATION ── */
+      #easter-egg-celebration{
+        position:fixed;inset:0;z-index:2500;background:rgba(0,0,0,0.9);
+        display:flex;flex-direction:column;align-items:center;justify-content:center;
+        text-align:center;padding:20px;
+      }
+      #easter-egg-celebration.hidden{display:none;}
+      #easter-egg-celebration h1{font-size:2.5rem;background:linear-gradient(135deg,#ff6b9d,#ffcc44);-webkit-background-clip:text;-webkit-text-fill-color:transparent;}
+      #easter-egg-celebration p{color:#fff;margin-top:12px;font-size:1.1rem;}
+      /* ── PAC-MAN MODAL ── */
+      #pacman-modal{
+        position:fixed;inset:0;z-index:3000;background:rgba(4,3,13,0.97);
+        display:flex;flex-direction:column;align-items:center;justify-content:flex-start;
+        padding:16px;
+      }
+      #pacman-modal.hidden{display:none;}
+      .pacman-header{display:flex;align-items:center;justify-content:space-between;
+        width:100%;max-width:540px;margin-bottom:10px;}
+      .pacman-header h2{color:#ff6b9d;font-size:1.1rem;letter-spacing:0.1em;}
+      .pacman-close{background:none;border:1px solid #444;color:#fff;border-radius:999px;
+        padding:6px 14px;cursor:pointer;font-size:0.8rem;}
+      #pacman-canvas{border-radius:12px;border:1px solid rgba(0,242,255,0.2);max-width:100%;}
+      .pacman-dpad{
+        display:grid;grid-template-areas:'  . up  .  ''left . right''  . down .  ';
+        gap:6px;margin-top:14px;
+      }
+      .pacman-dpad button{
+        width:48px;height:48px;border-radius:10px;
+        background:rgba(255,255,255,0.08);border:2px solid rgba(255,255,255,0.2);
+        color:#fff;font-size:1.2rem;cursor:pointer;transition:all 0.1s;
+      }
+      .pacman-dpad button:active{background:rgba(255,107,157,0.4);border-color:#ff6b9d;transform:scale(0.92);}
+      #pac-up{grid-area:up;}#pac-down{grid-area:down;}
+      #pac-left{grid-area:left;}#pac-right{grid-area:right;}
+    </style>
 </head>
 <body>
     <!-- Sidebar Overlay -->
@@ -77,7 +152,7 @@
 
         <!-- Logo -->
         <div class="logo-container">
-            <img src="/static/logo.png" alt="Munch" class="logo">
+            <img src="logo.png" alt="Munch" class="logo">
         </div>
 
         <!-- Connection Status -->
@@ -153,6 +228,62 @@
         </div>
     </div>
 
-    <script src="/static/app.js"></script>
+    <!-- DATE QUESTIONNAIRE MODAL -->
+    <div id="date-questionnaire-modal" class="date-modal-overlay hidden">
+      <div class="date-modal-box">
+        <h2>🎉 Did You Get a Date?!</h2>
+        <p>We noticed some promising signals in your conversation...</p>
+        <div class="date-signals" id="date-signals"></div>
+        <input class="date-field" id="date-where" placeholder="Where are you going? (e.g. dinner, coffee)" />
+        <input class="date-field" id="date-when" placeholder="When? (e.g. Saturday night)" />
+        <div class="date-vibe-row">
+          <button class="vibe-btn active" onclick="setVibe(this,'casual')">😎 Casual</button>
+          <button class="vibe-btn" onclick="setVibe(this,'romantic')">🌹 Romantic</button>
+          <button class="vibe-btn" onclick="setVibe(this,'coffee')">☕ Coffee</button>
+          <button class="vibe-btn" onclick="setVibe(this,'activity')">🎮 Activity</button>
+        </div>
+        <input type="hidden" id="date-vibe" value="casual" />
+        <div class="date-modal-btns">
+          <button class="btn-skip-date" onclick="closeDateModal()">Not yet</button>
+          <button class="btn-confirm-date" onclick="confirmDate()">I Got a Date! 💋</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- EASTER EGG CELEBRATION -->
+    <div id="easter-egg-celebration" class="hidden">
+      <h1>💋 WINNER WINNER 💋</h1>
+      <p style="font-size:3rem;margin:16px 0">🎮</p>
+      <p>You unlocked the MUNCH game!<br>You earned it, player. 🏆</p>
+    </div>
+
+    <!-- EASTER EGG BUTTON (hidden until unlocked) -->
+    <button id="easter-egg-btn" class="hidden" onclick="openEasterEgg()" title="Play MUNCH!">🎮</button>
+
+    <!-- PAC-MAN EASTER EGG MODAL -->
+    <div id="pacman-modal" class="hidden">
+      <div class="pacman-header">
+        <h2>💋 MUNCH — The Game</h2>
+        <button class="pacman-close" onclick="closeEasterEgg()">✕ close</button>
+      </div>
+      <canvas id="pacman-canvas"></canvas>
+      <div class="pacman-dpad">
+        <button id="pac-up">▲</button>
+        <button id="pac-left">◀</button>
+        <button id="pac-right">▶</button>
+        <button id="pac-down">▼</button>
+      </div>
+      <p style="color:#666;font-size:0.75rem;margin-top:10px;text-align:center">Eat all the dots. Avoid the girls with inflated egos. 😂</p>
+    </div>
+
+    <script src="app.js"></script>
+    <script>
+      // Vibe selector helper
+      function setVibe(btn, vibe) {
+        document.querySelectorAll('.vibe-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        document.getElementById('date-vibe').value = vibe;
+      }
+    </script>
 </body>
 </html>
